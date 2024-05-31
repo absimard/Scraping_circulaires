@@ -12,10 +12,10 @@ class Circular:
 
     def __init__(self, url):
         """
-        Initialize the circular linked list with an optional url.
+        Initialize the object.
 
         Args:
-            url (str, optional): The url for the circular linked list. Defaults to 'https://www.supermarches.ca/pages/Aubaines.asp'.
+            url (str, optional): The url for the circulars. Defaults to 'https://www.supermarches.ca/pages/Aubaines.asp'.
         """
         self.url = url
         self.content = []
