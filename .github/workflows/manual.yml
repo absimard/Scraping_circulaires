@@ -26,13 +26,8 @@ jobs:
         run: |
           python scraping_circulaires.py
 
-      - name: Upload Excel file to GitHub Release Page
-        if: github.event_name == 'elease'
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Excel file as artifact
+        uses: actions/upload-artifact@v2
         with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./circulaires.xlsx
-          asset_name: circulaires-${{ github.event.release.tag_name }}.xlsx
-          asset_content_type: application/zip
+          name: circulaires
+          path: ./circulaires.xlsx
