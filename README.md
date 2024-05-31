@@ -4,4 +4,4 @@ Crée un fichier Excel avec la liste des rabais dans les circulaires des épicer
 
 Pour installer toutes les dépendances, simplement utiliser :
 ```sh
-pip install requests beautifulsoup4 pandas re os
+pip install requests beautifulsoup4 pandas openpyxl
