@@ -3,116 +3,150 @@ import requests
 import re
 from bs4 import BeautifulSoup
 import pandas as pd
+import argparse
 
-# Define the base URL for the website
-base_url = 'https://www.supermarches.ca/pages/Aubaines.asp'
-
-# Define the filename for the Excel file
-filename = os.path.abspath('circulaires.xlsx')
-
-# Initialize an empty list to store the circulars
-circulars = []
-
-def scrape_circulars(num_pages):
+class Circular:
     """
-    Scrape circulars from the website.
-
-    Args:
-        num_pages (int): The number of pages to scrape.
-
-    Returns:
-        None
+    A class representing the circulars parsed/to parse.
     """
-    for page in range(1, num_pages+1):
-        # Construct the URL for each page
-        url = f'{base_url}?page={page}'
-        print(f"Scraping page {page} - URL: {url}")
 
-        # Send a GET request to the URL
-        response = requests.get(url)
+    def __init__(self, url):
+        """
+        Initialize the circular linked list with an optional url.
 
-        # Parse the HTML content using BeautifulSoup
-        soup = BeautifulSoup(response.content, 'html.parser')
+        Args:
+            url (str, optional): The url for the circular linked list. Defaults to 'https://www.supermarches.ca/pages/Aubaines.asp'.
+        """
+        self.url = url
+        self.content = []
 
-        # Find all anchor tags with the title "Cliquez ici pour ajouter cet article à votre liste d'épicerie"
-        anchor_tags = soup.find_all('a', title="Cliquez ici pour ajouter cet article à votre liste d'épicerie")
+    def scrape(self):
+        """
+        Scrape the circulars from the url.
+        """
+        self.soup = visitWebsite(self.url)
 
-        # Iterate over the anchor tags
-        for anchor_tag in anchor_tags:
-            # Find the parent table of the anchor tag
-            table = anchor_tag.find_parent('table')
+        # Find the page info
+        page_info = self.soup.find('td', string=lambda text: text and 'Page' in text)
 
-            # If a table is found, break the loop
-            if table is not None:
-                break
+        # If the page info is found
+        if page_info:
+            # Extract the page text
+            page_text = page_info.text.replace('\xa0', '').replace(' ', '')
 
-        # If no table is found, print a message
-        if table is None:
-            print("Aucune table trouvée.")
+            # Search for the number of pages
+            match = re.search(r'sur(\d+)\)', page_text)
 
-        # Iterate over the rows in the table
-        for row in table.find_all('tr')[1:]:
-            # Initialize an empty dictionary to store the circular data
-            circular = {}
+            # If the number of pages is found
+            if match:
+                # Extract the number of pages
+                num_pages = int(match.group(1))
+                print(f"Nombre de pages : {num_pages}")
 
-            # Find all the columns in the row
-            columns = row.find_all('td')
+                # Scrape the circulars
+                for page in range(1, num_pages+1):
+                    # Construct the URL for each page
+                    page_url = f'{self.url}?page={page}'
+                    print(f"Scraping page {page} - URL: {page_url}")
 
-            # Extract the data from the columns and store it in the circular dictionary
-            circular['Magasin'] = columns[7].text.strip().replace('Circ. - Mag.', '')
-            circular['Description'] = columns[1].text.strip()
-            circular['Format'] = columns[2].text.strip()
-            circular['Origine'] = columns[3].text.strip()
-            circular['Prix ($)'] = columns[4].text.strip()
-            circular['Rabais ($)'] = float(columns[5].text.strip().split('\xa0')[0].replace(' ','').replace('$',''))
-            circular['Rabais (%)'] = columns[5].text.strip().split('\xa0')[1].replace('(','').replace(')','')
-            circular['Début/Fin'] = columns[6].text.strip()
-            circular['Lien'] = columns[7].find_all('a')[0]['href']
+                    soup = visitWebsite(page_url)
 
-            # Add the circular to the circulars list
-            circulars.append(circular)
+                    # Find all anchor tags representing an article
+                    anchor_tags = soup.find_all('a', title="Cliquez ici pour ajouter cet article à votre liste d'épicerie")
 
-    # Create a new Excel workbook
-    df = pd.DataFrame(circulars)
+                    # Iterate over the anchor tags
+                    for anchor_tag in anchor_tags:
+                        # Find the parent table of the anchor tag
+                        table = anchor_tag.find_parent('table')
 
-    # Save the workbook to the file
-    df.to_excel(filename, index=False)
-    print(f"Data exported to {filename}")
+                        # If a table is found, break the loop
+                        if table is not None:
+                            break
 
-def main():
-    # Send a GET request to the base URL
-    response = requests.get(base_url)
+                    # If no table is found, print a message
+                    if table is None:
+                        print("Aucune table trouvée.")
 
-    # Parse the HTML content using BeautifulSoup
-    soup = BeautifulSoup(response.content, 'html.parser')
+                    # Iterate over the rows in the table
+                    for row in table.find_all('tr')[1:]:
+                        # Initialize an empty dictionary to store the circular data
+                        circular = {}
 
-    # Find the page info
-    page_info = soup.find('td', string=lambda text: text and 'Page' in text)
+                        # Find all the columns in the row
+                        columns = row.find_all('td')
 
-    # If the page info is found
-    if page_info:
-        # Extract the page text
-        page_text = page_info.text.replace('\xa0', '').replace(' ', '')
+                        # Extract the data from the columns and store it in the circular dictionary
+                        circular['Magasin'] = columns[7].text.strip().replace('Circ. - Mag.', '')
+                        circular['Description'] = columns[1].text.strip()
+                        circular['Format'] = columns[2].text.strip()
+                        circular['Origine'] = columns[3].text.strip()
+                        circular['Prix ($)'] = columns[4].text.strip()
+                        circular['Rabais ($)'] = float(columns[5].text.strip().split('\xa0')[0].replace(' ','').replace('$',''))
+                        circular['Rabais (%)'] = columns[5].text.strip().split('\xa0')[1].replace('(','').replace(')','')
+                        circular['Début/Fin'] = columns[6].text.strip()
+                        circular['Lien'] = columns[7].find_all('a')[0]['href']
 
-        # Search for the number of pages
-        match = re.search(r'sur(\d+)\)', page_text)
+                        # Add the circular to the object content
+                        self.content.append(circular)
 
-        # If the number of pages is found
-        if match:
-            # Extract the number of pages
-            num_pages = int(match.group(1))
-            print(f"Nombre de pages : {num_pages}")
+            # If the number of pages is not found
+            else:
+                print("Impossible de trouver le nombre de pages")
 
-            # Scrape the circulars
-            scrape_circulars(num_pages)
-
-        # If the number of pages is not found
+        # If the page info is not found
         else:
             print("Impossible de trouver le nombre de pages")
 
-    # If the page info is not found
-    else:
-        print("Impossible de trouver le nombre de pages")
+class ExcelFile:
+    """
+    A class representing an Excel file.
+    """
+
+    def __init__(self, filename=os.path.abspath('circulaires.xlsx'), content=[]):
+        """
+        Initialize the Excel file with a filename and optional content.
+
+        Args:
+            filename (str, optional): The filename for the Excel file. Defaults to 'circulaires.xlsx' in the current working directory.
+            content (list, optional): The initial content for the Excel file. Defaults to an empty list.
+        """
+        self.filename = filename
+        # Initialize an empty list to store the circulars
+        self.content = content
+
+    def write(self):
+        """
+        Write the content to the Excel file.
+        """
+        # Create a new Excel workbook
+        df = pd.DataFrame(self.content)
+
+        # Save the workbook to the file
+        df.to_excel(self.filename, index=False)
+        print(f"Data exported to {self.filename}")
+
+def visitWebsite(url):
+    """
+    Using BeatifulSoup in a session (reduces the network charge), returns the content of the website
+    """
+    # Send a GET request to the base URL
+    response = requests.get(url)
+
+    # Parse the HTML content using BeautifulSoup
+    return BeautifulSoup(response.content, 'html.parser')
+
+def main():
+    # Parse the arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-u", "--url", help="Spécifiez l'URL où on prend les circulaires", default="https://www.supermarches.ca/pages/Aubaines.asp")
+    args = parser.parse_args()
+    # Create an empty Circular instance
+    circulars = Circular(args.url)
+    # Parse the website
+    circulars.scrape()
+    # Create and fill an Excel spreadsheet
+    excel_file = ExcelFile(content=circulars.content)
+    excel_file.write()
 
 if __name__ == '__main__':
     main()
