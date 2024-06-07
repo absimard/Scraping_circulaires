@@ -27,3 +27,4 @@ jobs:
         with:
           name: circulaires
           path: ./circulaires.xlsx
+          visibility: public
