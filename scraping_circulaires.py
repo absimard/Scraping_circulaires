@@ -1,6 +1,7 @@
 import os
 import requests
 import re
+import openpyxl
 from bs4 import BeautifulSoup
 import pandas as pd
 import argparse
@@ -123,6 +124,17 @@ class ExcelFile:
 
         # Save the workbook to the file
         df.to_excel(self.filename, index=False)
+
+        # Open the workbook with openpyxl to modify column widths
+        wb = openpyxl.load_workbook(self.filename)
+        ws = wb.active
+
+        # Set all column widths 25
+        for col in ws.columns:
+            col_letter = col[0].column_letter
+            ws.column_dimensions[col_letter].width = 25
+
+        wb.save(self.filename)
         print(f"Data exported to {self.filename}")
 
 def visitWebsite(url):
@@ -143,9 +155,11 @@ def main():
     # Create an empty Circular instance
     circulars = Circular(args.url)
     # Parse the website
-    circulars.scrape()
+    circulars.scrape()    
+    # Sort from best to worst rebate
+    sorted_circulars = sorted(circulars.content, key=lambda x: float(x['Rabais (%)'].replace('%', '').strip()), reverse=True)
     # Create and fill an Excel spreadsheet
-    excel_file = ExcelFile(content=circulars.content)
+    excel_file = ExcelFile(content=sorted_circulars)
     excel_file.write()
 
 if __name__ == '__main__':
