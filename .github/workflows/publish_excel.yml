@@ -1,0 +1,47 @@
+name: Générer Excel et publier
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: |
+          pip install -r requirements.txt
+
+      - name: Lancer le script Python
+        run: |
+          python scraping_circulaire.py
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copier le fichier Excel vers gh-pages
+        run: |
+          mkdir -p gh-pages/assets
+          cp output/circulaires.xlsx gh-pages/assets/circulaires.xlsx
+
+      - name: Commit et push vers gh-pages
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/circulaires.xlsx
+          git commit -m "Update circulaires.xlsx" || echo "Rien à committer"
+          git push origin gh-pages
