@@ -1,0 +1,34 @@
+name: Manual Execution
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'Message to display in job logs'
+        required: true
+        default: 'Manually Executed'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.12
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run Python script
+        run: |
+          python scraping_circulaires.py
+
+      - name: Upload Excel file as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: circulaires
+          path: ./circulaires.xlsx
+          visibility: public

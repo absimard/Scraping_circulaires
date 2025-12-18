@@ -1,0 +1,53 @@
+name: Générer Excel et publier
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: "0 8 * * 4"  # Tous les jeudis à 08:00 UTC
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Installer les dépendances
+        run: |
+          pip install -r requirements.txt
+
+      - name: Lancer le script Python
+        run: |
+          python scraping_circulaires.py  # doit créer output/circulaires.xlsx
+
+      - name: Générer la date
+        id: date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Copier le fichier Excel vers gh-pages avec date
+        run: |
+          mkdir -p gh-pages/assets
+          cp output/circulaires.xlsx "gh-pages/assets/circulaires_${DATE}.xlsx"
+
+      - name: Commit et push vers gh-pages
+        working-directory: gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add assets/
+          git commit -m "Update circulaires_${DATE}.xlsx" || echo "Rien à committer"
+          git push origin gh-pages
