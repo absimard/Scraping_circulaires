@@ -45,7 +45,7 @@
 
     <script>
         // Charger la liste des fichiers Excel depuis le dossier assets/
-        fetch('assets/')
+        fetch('./assets/')
             .then(response => response.text())
             .then(html => {
                 const parser = new DOMParser();
