@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 8 * * 4"
+    - cron: "0 8 * * 4"  # Tous les jeudis à 08:00 UTC
 
 jobs:
   build-and-deploy:
@@ -26,9 +26,9 @@ jobs:
 
       - name: Lancer le script Python
         run: |
-          python scraping_circulaires.py
+          python scraping_circulaires.py  # doit créer output/circulaires.xlsx
 
-            - name: Générer la date
+      - name: Générer la date
         id: date
         run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
