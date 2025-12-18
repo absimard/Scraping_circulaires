@@ -21,9 +21,9 @@
     <h1>📊 Archive des Circulaires</h1>
     
     <div class="description">
-        <p><strong>À quoi ça sert :</strong> Ce site héberge les fichiers Excel générés automatiquement chaque jeudi à 13h par un script Python de scraping. Chaque fichier contient les circulaires les plus récentes collectées depuis les sources publiques.</p>
+        <p><strong>À quoi ça sert :</strong> Ce site héberge les fichiers Excel générés automatiquement chaque jeudi à 8h UTC par un script Python de scraping. Chaque fichier contient les circulaires les plus récentes collectées depuis les sources publiques.</p>
         <ul>
-            <li>📅 <strong>Généré :</strong> Hebdomadaire (tous les jeudis 13h UTC)</li>
+            <li>📅 <strong>Généré :</strong> Hebdomadaire (tous les jeudis 8h UTC)</li>
             <li>🔄 <strong>Dernière mise à jour :</strong> Automatique via GitHub Actions</li>
             <li>📂 <strong>Format :</strong> Excel (.xlsx) avec données structurées</li>
         </ul>
@@ -35,7 +35,7 @@
             <!-- Les fichiers seront listés ici par JavaScript -->
         </div>
         <div class="no-files" id="no-files" style="display: none;">
-            Aucun fichier disponible. Première génération en cours...
+            Aucun fichier disponible!
         </div>
     </div>
 
@@ -58,15 +58,15 @@
           const noFiles = document.getElementById('no-files');
     
           if (links.length > 0) {
-            fileCount.textContent = `(${links.length} fichier${links.length > 1 ? 's' : ''})`;
-            noFiles.style.display = 'none';
-    
-            links.forEach(fileName => {
+              fileCount.textContent = '(1 fichier)';
+              noFiles.style.display = 'none';
+            
+              const fileName = links[0]; // le plus récent grâce au sort
               const dateMatch = fileName.match(/(\d{4}-\d{2}-\d{2})/);
               const date = dateMatch
                 ? new Date(dateMatch[1]).toLocaleDateString('fr-FR')
                 : 'Date inconnue';
-    
+            
               const fileDiv = document.createElement('div');
               fileDiv.className = 'file';
               fileDiv.innerHTML = `
@@ -74,14 +74,14 @@
                   <span class="file-date">${date}</span><br>
                   <small>${fileName}</small>
                 </div>
-                <a href="assets/${fileName}" download>📥 Télécharger</a>
+                <a href="assets/${fileName}" download>📥 Télécharger le dernier fichier</a>
               `;
               fileList.appendChild(fileDiv);
-            });
-          } else {
-            fileCount.textContent = '(0)';
-            noFiles.style.display = 'block';
-          }
+            } else {
+              fileCount.textContent = '(0)';
+              noFiles.style.display = 'block';
+            }
+
         })
         .catch(() => {
           document.getElementById('file-count').textContent = '(erreur)';
