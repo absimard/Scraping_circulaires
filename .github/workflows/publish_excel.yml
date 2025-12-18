@@ -5,7 +5,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 8 * * 4"  # Tous les jeudis à 08:00 UTC
+    - cron: "13 8 * * 4"  # Tous les jeudis à 13:00 UTC
 
 jobs:
   build-and-deploy:
