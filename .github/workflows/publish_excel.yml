@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  schedule:
+    - cron: "0 8 * * 4"
 
 jobs:
   build-and-deploy:
@@ -26,22 +28,26 @@ jobs:
         run: |
           python scraping_circulaires.py
 
+            - name: Générer la date
+        id: date
+        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
       - name: Checkout gh-pages
         uses: actions/checkout@v4
         with:
           ref: gh-pages
           path: gh-pages
 
-      - name: Copier le fichier Excel vers gh-pages
+      - name: Copier le fichier Excel vers gh-pages avec date
         run: |
           mkdir -p gh-pages/assets
-          cp output/circulaires.xlsx gh-pages/assets/circulaires.xlsx
+          cp output/circulaires.xlsx "gh-pages/assets/circulaires_${DATE}.xlsx"
 
       - name: Commit et push vers gh-pages
         working-directory: gh-pages
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add assets/circulaires.xlsx
-          git commit -m "Update circulaires.xlsx" || echo "Rien à committer"
+          git add assets/
+          git commit -m "Update circulaires_${DATE}.xlsx" || echo "Rien à committer"
           git push origin gh-pages
