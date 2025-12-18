@@ -26,7 +26,7 @@ jobs:
 
       - name: Lancer le script Python
         run: |
-          python scraping_circulaires.py  # doit créer output/circulaires.xlsx
+          python scraping_circulaires.py
 
       - name: Générer la date
         id: date
@@ -41,7 +41,7 @@ jobs:
       - name: Copier le fichier Excel vers gh-pages avec date
         run: |
           mkdir -p gh-pages/assets
-          cp output/circulaires.xlsx "gh-pages/assets/circulaires_${DATE}.xlsx"
+          cp circulaires.xlsx "gh-pages/assets/circulaires_${DATE}.xlsx"
 
       - name: Commit et push vers gh-pages
         working-directory: gh-pages
