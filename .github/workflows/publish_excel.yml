@@ -24,7 +24,7 @@ jobs:
 
       - name: Lancer le script Python
         run: |
-          python scraping_circulaire.py
+          python scraping_circulaires.py
 
       - name: Checkout gh-pages
         uses: actions/checkout@v4
