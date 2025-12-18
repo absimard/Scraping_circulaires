@@ -6,6 +6,7 @@ on:
       - main
   schedule:
     - cron: "0 8 * * 4"  # Tous les jeudis à 08:00 UTC
+  workflow_dispatch:  # ← AJOUTE ÇA pour le bouton manuel
 
 jobs:
   build-and-deploy:
