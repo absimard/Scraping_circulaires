@@ -82,8 +82,22 @@ class Circular:
                         circular['Format'] = columns[2].text.strip()
                         circular['Origine'] = columns[3].text.strip()
                         circular['Prix ($)'] = columns[4].text.strip()
-                        circular['Rabais ($)'] = float(columns[5].text.strip().split('\xa0')[0].replace(' ','').replace('$',''))
-                        circular['Rabais (%)'] = columns[5].text.strip().split('\xa0')[1].replace('(','').replace(')','')
+
+                        # Nettoyer le texte du rabais (remplace les espaces insécables par des espaces normaux)
+                        rabais_text = columns[5].text.strip().replace('\xa0', ' ')
+
+                        # Extraire le montant (ex: "2.80") et le pourcentage (ex: "32") peu importe
+                        # la présence/absence d'espaces ou du symbole $ entre les deux
+                        match = re.search(r'-?\s*([\d]+[.,]?\d*)\s*\$?\s*\(\s*([\d]+[.,]?\d*)\s*%\s*\)', rabais_text)
+
+                        if match:
+                            circular['Rabais ($)'] = float(match.group(1).replace(',', '.'))
+                            circular['Rabais (%)'] = match.group(2).replace(',', '.') + '%'
+                        else:
+                            print(f"Format de rabais inattendu : '{rabais_text}'")
+                            circular['Rabais ($)'] = None
+                            circular['Rabais (%)'] = None
+
                         circular['Début/Fin'] = columns[6].text.strip()
                         circular['Lien'] = columns[7].find_all('a')[0]['href']
 
@@ -156,8 +170,14 @@ def main():
     circulars = Circular(args.url)
     # Parse the website
     circulars.scrape()    
-    # Sort from best to worst rebate
-    sorted_circulars = sorted(circulars.content, key=lambda x: float(x['Rabais (%)'].replace('%', '').strip()), reverse=True)
+    # Sort from best to worst rebate (les valeurs manquantes/None sont mises à la fin)
+    def rabais_pct(x):
+        val = x.get('Rabais (%)')
+        if not val:
+            return -1
+        return float(val.replace('%', '').strip())
+
+    sorted_circulars = sorted(circulars.content, key=rabais_pct, reverse=True)
     # Create and fill an Excel spreadsheet
     excel_file = ExcelFile(content=sorted_circulars)
     excel_file.write()
